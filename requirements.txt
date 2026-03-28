@@ -1,0 +1,13 @@
+accelerate>=0.33.0
+datasets>=2.21.0
+evaluate>=0.4.2
+jiwer>=3.0.4
+numpy>=1.26.0
+pandas>=2.2.0
+PyYAML>=6.0.2
+rich>=13.7.1
+soundfile>=0.12.1
+torch>=2.3.0
+torchaudio>=2.3.0
+tqdm>=4.66.4
+transformers>=4.44.0

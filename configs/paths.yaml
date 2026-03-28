@@ -1,0 +1,6 @@
+project_root: .
+cache_dir: ./hf_cache
+data_dir: ./outputs/manifests
+reports_dir: ./outputs/reports
+checkpoints_dir: ./outputs/checkpoints
+logs_dir: ./outputs/logs

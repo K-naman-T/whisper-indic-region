@@ -1,0 +1,36 @@
+dataset_name: ai4bharat/IndicVoices
+languages:
+  - hindi
+  - maithili
+  - bengali
+  - urdu
+text_column: normalized
+audio_column: audio_filepath
+speaker_column: speaker_id
+split_column_source:
+  train: train
+  valid: valid
+
+filters:
+  min_duration_sec: 1.0
+  max_duration_sec: 30.0
+  require_non_empty_text: true
+  drop_missing_speaker: false
+
+sampling:
+  balanced_language_sampling: true
+  language_weights:
+    hindi: 1.0
+    maithili: 1.2
+    bengali: 1.0
+    urdu: 1.0
+
+split_strategy:
+  create_internal_dev_from_train: true
+  internal_dev_fraction: 0.05
+  speaker_disjoint: true
+  random_seed: 42
+
+normalization:
+  force_arabic_digits_0_9: true
+  strip_extra_whitespace: true

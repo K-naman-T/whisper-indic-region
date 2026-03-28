@@ -1,0 +1,24 @@
+seed: 42
+output_dir: outputs/checkpoints
+logging_dir: outputs/logs
+
+precision: fp16
+gradient_checkpointing: true
+
+train:
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 8
+  learning_rate: 1.0e-5
+  warmup_ratio: 0.05
+  max_steps: 20000
+  weight_decay: 0.01
+  lr_scheduler_type: cosine
+
+eval:
+  per_device_eval_batch_size: 2
+  eval_steps: 500
+  save_steps: 500
+  logging_steps: 50
+  save_total_limit: 3
+  metric_for_best_model: wer
+  greater_is_better: false
