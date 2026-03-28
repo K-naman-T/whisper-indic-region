@@ -2,33 +2,41 @@
 
 Fine-tuning OpenAI's Whisper model for Indian regional languages using the `ai4bharat/IndicVoices` dataset.
 
-## Training Plan: Phase 1 (Pilot)
+## Training Plan: Phase 1 (Multi-Lingual Pilot)
 
 ### 1. Infrastructure Setup
 *   **Target Node**: `vyom-node-3` (RTX 4090).
 *   **Environment**: Python 3.10+ virtual environment.
-*   **Core Dependencies**: `torch`, `transformers`, `peft`, `bitsandbytes`, `datasets`, `accelerate`.
+*   **Core Dependencies**: `torch`, `transformers`, `peft` (LoRA), `bitsandbytes`, `datasets`, `accelerate`.
 
 ### 2. Data Strategy
-*   **Dataset**: `ai4bharat/IndicVoices` (Multilingual Speech Dataset).
-*   **Target Languages**: Hindi, Bengali, Tamil.
+*   **Dataset**: `ai4bharat/IndicVoices` (22 Languages).
+*   **Target Languages**:
+    *   **Hindi** (Devanagari)
+    *   **Bangla** (Bengali)
+    *   **Maithili** (Devanagari)
+    *   **Urdu** (Nastaliq/Arabic)
 *   **Preprocessing**:
-    *   Audio resampling to 16kHz mono.
-    *   Unicode normalization for transcripts.
-    *   Quality filtering (dropping noisy/short clips).
+    *   Resampling: 16kHz mono.
+    *   Normalization: Unicode NFC, whitespace stripping, and script-aware character cleaning.
+    *   Sampling: Weighted sampling to ensure Maithili and Urdu represent equal gradient contribution.
 
 ### 3. Model Configuration
 *   **Base Model**: `openai/whisper-medium`.
 *   **Fine-tuning Method**: **LoRA (PEFT)**.
-    *   Enables parameter-efficient tuning.
-    *   Reduced VRAM footprint on RTX 4090.
-*   **Optimization**: 8-bit quantization (`bitsandbytes`) and mixed-precision (FP16/BF16).
+    *   `r=16`, `lora_alpha=32`.
+    *   Targets: `q_proj`, `v_proj`.
+*   **Optimization**: 8-bit quantization (`bitsandbytes`) to maximize batch size on RTX 4090.
+*   **Hyperparameters**:
+    *   LR: `1e-4`.
+    *   Batch Size: `16` (Effective `32` with grad accumulation).
+    *   Scheduler: Linear warmup + Cosine decay.
 
 ### 4. Execution Workflow
-1.  **Environment Check**: Run `python scripts/doctor.py` to verify GPU/CUDA availability.
-2.  **Data Preparation**: Run `python scripts/prepare_data.py` for the selected languages.
-3.  **Training**: Execute `python scripts/train.py` using configurations in `configs/train.yaml`.
-4.  **Evaluation**: Run `python scripts/evaluate.py` to calculate WER/CER per language.
+1.  **Environment Check**: `python scripts/doctor.py`
+2.  **Data Preparation**: `python scripts/prepare_data.py --languages hi,bn,mai,ur`
+3.  **Training**: `python scripts/train.py --config configs/train.yaml`
+4.  **Evaluation**: `python scripts/evaluate.py` targeting WER (Word Error Rate) and CER (Character Error Rate).
 
 ## Repository Structure
 *   `configs/`: YAML configurations for data, model, and training.
@@ -37,4 +45,4 @@ Fine-tuning OpenAI's Whisper model for Indian regional languages using the `ai4b
 *   `outputs/`: (Ignored) Model checkpoints, logs, and reports.
 
 ## OpenCode Prompt
-> "Clone the repository `https://github.com/K-naman-T/whisper-indic-region`. Initialize a virtual environment and install dependencies from `requirements.txt`. Configure the system to fine-tune `whisper-medium` using LoRA (PEFT) on the `ai4bharat/IndicVoices` dataset. Target languages: Hindi, Bengali, and Tamil. Run the `scripts/prepare_data.py` script to verify the pipeline, then execute `scripts/train.py` utilizing the RTX 4090 for hardware acceleration."
+> "Clone `https://github.com/K-naman-T/whisper-indic-region`. Set up a Python venv and install requirements. Use the ML Engineer skill to configure a fine-tuning run for `whisper-medium` on Hindi, Bangla, Maithili, and Urdu. Implement LoRA (PEFT) for parameter-efficient training. Run `scripts/prepare_data.py` then initiate `scripts/train.py` on the RTX 4090."

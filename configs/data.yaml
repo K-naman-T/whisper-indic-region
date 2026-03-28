@@ -1,8 +1,8 @@
 dataset_name: ai4bharat/IndicVoices
 languages:
   - hindi
-  - maithili
   - bengali
+  - maithili
   - urdu
 text_column: normalized
 audio_column: audio_filepath
@@ -21,9 +21,9 @@ sampling:
   balanced_language_sampling: true
   language_weights:
     hindi: 1.0
-    maithili: 1.2
     bengali: 1.0
-    urdu: 1.0
+    maithili: 1.5
+    urdu: 1.5
 
 split_strategy:
   create_internal_dev_from_train: true
