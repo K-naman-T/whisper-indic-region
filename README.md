@@ -1,132 +1,40 @@
-# Whisper Indic Region Training Repo
+# Whisper Indic Fine-Tuning
 
-Train and evaluate `openai/whisper-large-v3` for region-focused ASR on IndicVoices using:
+Fine-tuning OpenAI's Whisper model for Indian regional languages using the `ai4bharat/IndicVoices` dataset.
 
-- Hindi
-- Maithili
-- Bengali
-- Urdu
+## Training Plan: Phase 1 (Pilot)
 
-This project is set up for an A6000-first workflow and can be cloned to a GPU server.
+### 1. Infrastructure Setup
+*   **Target Node**: `vyom-node-3` (RTX 4090).
+*   **Environment**: Python 3.10+ virtual environment.
+*   **Core Dependencies**: `torch`, `transformers`, `peft`, `bitsandbytes`, `datasets`, `accelerate`.
 
-## What is included
+### 2. Data Strategy
+*   **Dataset**: `ai4bharat/IndicVoices` (Multilingual Speech Dataset).
+*   **Target Languages**: Hindi, Bengali, Tamil.
+*   **Preprocessing**:
+    *   Audio resampling to 16kHz mono.
+    *   Unicode normalization for transcripts.
+    *   Quality filtering (dropping noisy/short clips).
 
-- Non-blocking doctor script (`scripts/doctor.py`) that runs all checks and writes JSON report
-- Dataset audit and preparation scripts
-- Starter training script for Whisper fine-tuning
-- Evaluation script with per-language WER/CER output
-- YAML configs for data/model/train/path settings
+### 3. Model Configuration
+*   **Base Model**: `openai/whisper-medium`.
+*   **Fine-tuning Method**: **LoRA (PEFT)**.
+    *   Enables parameter-efficient tuning.
+    *   Reduced VRAM footprint on RTX 4090.
+*   **Optimization**: 8-bit quantization (`bitsandbytes`) and mixed-precision (FP16/BF16).
 
-## Repository layout
+### 4. Execution Workflow
+1.  **Environment Check**: Run `python scripts/doctor.py` to verify GPU/CUDA availability.
+2.  **Data Preparation**: Run `python scripts/prepare_data.py` for the selected languages.
+3.  **Training**: Execute `python scripts/train.py` using configurations in `configs/train.yaml`.
+4.  **Evaluation**: Run `python scripts/evaluate.py` to calculate WER/CER per language.
 
-```text
-configs/
-scripts/
-src/
-outputs/
-requirements.txt
-.env.example
-```
+## Repository Structure
+*   `configs/`: YAML configurations for data, model, and training.
+*   `scripts/`: Core execution scripts (train, prepare, evaluate).
+*   `src/`: Shared source code (data loaders, metrics, utils).
+*   `outputs/`: (Ignored) Model checkpoints, logs, and reports.
 
-## 1) Local/Server setup
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-Create environment file:
-
-```bash
-cp .env.example .env
-```
-
-Set your Hugging Face token in `.env` and export it:
-
-```bash
-set -a
-source .env
-set +a
-```
-
-## 2) Run doctor checks
-
-```bash
-python scripts/doctor.py
-```
-
-The doctor script always runs the full checklist, even when checks fail.
-
-- Terminal summary: `PASS | WARN | FAIL` per check
-- JSON report: `outputs/reports/doctor_report.json`
-
-## 3) Audit dataset sizes
-
-```bash
-python scripts/audit_dataset.py
-```
-
-Output report: `outputs/reports/dataset_audit.json`
-
-## 4) Prepare data manifests
-
-```bash
-python scripts/prepare_data.py
-```
-
-Produces:
-
-- `outputs/manifests/train.parquet`
-- `outputs/manifests/dev.parquet`
-- `outputs/manifests/test.parquet`
-- `outputs/reports/data_prep_summary.json`
-
-Notes:
-
-- Uses `normalized` text column
-- Applies duration/text filters from `configs/data.yaml`
-- Applies numeral normalization to `0-9`
-- Creates internal speaker-disjoint dev split from train
-
-## 5) Train model
-
-```bash
-python scripts/train.py
-```
-
-Key outputs:
-
-- Checkpoints under `outputs/checkpoints/`
-- Training metrics report `outputs/reports/train_eval_metrics.json`
-
-## 6) Evaluate model
-
-```bash
-python scripts/evaluate.py --checkpoint-dir outputs/checkpoints
-```
-
-Output report:
-
-- `outputs/reports/evaluation_report.json`
-
-## Config files
-
-- `configs/data.yaml`: languages, filtering, split strategy, normalization policy
-- `configs/model.yaml`: model name and language-token mapping
-- `configs/train.yaml`: hyperparameters and checkpoint strategy
-- `configs/paths.yaml`: cache/output paths
-
-## Important first-run notes
-
-- IndicVoices is gated: accept terms in Hugging Face UI before running scripts.
-- Maithili currently maps to Whisper language token `hi` in this starter setup.
-- Start with small pilot steps by lowering `max_steps` in `configs/train.yaml`, then scale.
-
-## Suggested next upgrades
-
-- Add weighted language sampler for stronger Maithili emphasis
-- Add checkpoint resume and experiment tagging
-- Add decode parameter sweep per language
-- Add optional W&B/TensorBoard tracking
+## OpenCode Prompt
+> "Clone the repository `https://github.com/K-naman-T/whisper-indic-region`. Initialize a virtual environment and install dependencies from `requirements.txt`. Configure the system to fine-tune `whisper-medium` using LoRA (PEFT) on the `ai4bharat/IndicVoices` dataset. Target languages: Hindi, Bengali, and Tamil. Run the `scripts/prepare_data.py` script to verify the pipeline, then execute `scripts/train.py` utilizing the RTX 4090 for hardware acceleration."
